@@ -1,5 +1,5 @@
 
-//Judul   : Program Relay dengan Display info, Web Server, Dan Blynk
+//Judul   : Program Relay dengan Display info
 //Pencipta: Anjas Amar Pradana
 //Drive   : ESP8266
 //Dibuat  : 20/04/2022
@@ -11,9 +11,9 @@
 #include <Wire.h>
 // ID Template, Nama Perangkat, dan Token Otentikasi disediakan oleh Blynk.Cloud
 // Lihat tab Info Perangkat, atau pengaturan Template
-#define BLYNK_TEMPLATE_ID           "Tempalte ID Anda"
-#define BLYNK_DEVICE_NAME           "Device Anda"
-#define BLYNK_AUTH_TOKEN            "Token Anda"
+#define BLYNK_TEMPLATE_ID           "Template ID Anda"
+#define BLYNK_DEVICE_NAME           "Nama Perangkat Anda"
+#define BLYNK_AUTH_TOKEN            "Akes Token Anda"
 // Komentari ini untuk menonaktifkan cetakan dan menghemat ruang
 #define BLYNK_PRINT Serial
 #include <BlynkSimpleEsp8266.h>
@@ -77,7 +77,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ATSiDev - Kontrol IOT Saklar Relay</title>
+  <title>Kontrol IOT Saklar Relay</title>
   <style>
     html {font-family: Arial; display: inline-block; text-align: center;}
     h2 {font-size: 3.0rem;}
@@ -92,7 +92,7 @@ const char index_html[] PROGMEM = R"rawliteral(
   </style>
 </head>
 <body>
-  <h2>ATSiDev - ESP8266 <br/>Relay IoT Controller</h2><hr/>
+  <h2>Risky Wuelek - ESP8266 <br/>Web Server IoT Controller</h2><hr/>
   %BUTTONPLACEHOLDER%
 <script>function toggleCheckbox(element) {
   var xhr = new XMLHttpRequest();
@@ -147,14 +147,17 @@ void myTimerEvent()
   Blynk.virtualWrite(V2, millis() / 1000);
 }
 
+
+//=====================
 // bagian fungsi setup
+//=====================
 void setup(){
 
 // Debug console
   Serial.begin(115200);
 
-  Blynk.begin(auth, ssid, pass);
-  // Anda juga dapat menentukan server:
+  Blynk.begin(auth, ssid, password);
+  //Anda juga dapat menentukan server:
   //Blynk.begin(auth, ssid, pass, "blynk.cloud", 80);
   //Blynk.begin(auth, ssid, pass, IPAddress(192.168.1.100), 8080);
 
@@ -201,7 +204,7 @@ void setup(){
     String inputParam;
     String inputMessage2;
     String inputParam2;
-    // GET input1 value on <ESP_IP>/update?relay=<inputMessage>
+    // DAPATKAN nilai input1 aktif <ESP_IP>/update?relay=<inputMessage>
     if (request->hasParam(PARAM_INPUT_1) & request->hasParam(PARAM_INPUT_2)) {
       inputMessage = request->getParam(PARAM_INPUT_1)->value();
       inputParam = PARAM_INPUT_1;
@@ -227,7 +230,7 @@ void setup(){
   server.begin();
 }
 
-
+// Setel Informasi Statis Ke LCD
 String messageStatic = "KSRM:";
 String messageToScroll = "Kontrol Saklar Relay Monitor";
 String messageInfoPortNonAktif = "Tidak/Belum Digunakan";
@@ -250,7 +253,9 @@ void scrollText(int row, String message, int delayTime, int lcdColumns) {
   }
 }
 
+//========================
 // bagian looping program
+//========================
 void loop() {
 
   Blynk.run();
