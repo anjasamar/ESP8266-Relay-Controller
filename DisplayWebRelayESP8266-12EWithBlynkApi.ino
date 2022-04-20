@@ -5,18 +5,10 @@
 //Dibuat  : 20/04/2022
 
 // Impor perpustakaan yang diperlukan
-#include <ESP8266WiFi.h>
-#include <ESPAsyncWebServer.h>
+#include "ESP8266WiFi.h"
+#include "ESPAsyncWebServer.h"
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
-// ID Template, Nama Perangkat, dan Token Otentikasi disediakan oleh Blynk.Cloud
-// Lihat tab Info Perangkat, atau pengaturan Template
-#define BLYNK_TEMPLATE_ID           "Template ID Anda"
-#define BLYNK_DEVICE_NAME           "Nama Perangkat Anda"
-#define BLYNK_AUTH_TOKEN            "Akes Token Anda"
-// Komentari ini untuk menonaktifkan cetakan dan menghemat ruang
-#define BLYNK_PRINT Serial
-#include <BlynkSimpleEsp8266.h>
  
 // atur jumlah kolom dan baris LCD
 int lcdColumns = 16;
@@ -39,35 +31,13 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 int relayGPIOs[NUM_RELAYS] = {14, 12, 13, 15, 02};
 
 // Ganti dengan kredensial jaringan Anda
-const char* ssid = "SSID Wifi Anda";
-const char* password = "Password Wifi Anda";
+const char* ssid = "Wifi SSID";
+const char* password = "Wifi Password";
+
 
 // untuk parameter input status dan relay
 const char* PARAM_INPUT_1 = "relay";  
 const char* PARAM_INPUT_2 = "state";
-
-// untuk autentifikasi Blynk Cloud
-char auth[] = BLYNK_AUTH_TOKEN;
-BlynkTimer timer;
-
-// Fungsi ini dipanggil setiap kali status Virtual Pin 0 berubah
-BLYNK_WRITE(V0)
-{
-  // Tetapkan nilai yang masuk dari pin V0 ke variabel
-  int value = param.asInt();
-
-  // Perbarui status
-  Blynk.virtualWrite(V1, value);
-}
-
-// Fungsi ini dipanggil setiap kali perangkat terhubung ke Blynk.Cloud
-BLYNK_CONNECTED()
-{
-  // Ubah pesan Tombol Tautan Web menjadi "Selamat!"
-  Blynk.setProperty(V3, "offImageUrl", "https://static-image.nyc3.cdn.digitaloceanspaces.com/general/fte/congratulations.png");
-  Blynk.setProperty(V3, "onImageUrl",  "https://static-image.nyc3.cdn.digitaloceanspaces.com/general/fte/congratulations_pressed.png");
-  Blynk.setProperty(V3, "url", "https://docs.blynk.io/en/getting-started/what-do-i-need-to-blynk/how-quickstart-device-was-made");
-}
 
 // Buat objek AsyncWebServer pada port 80
 AsyncWebServer server(80);
@@ -139,37 +109,15 @@ String relayState(int numRelay){
   return "";
 }
 
-// Fungsi ini mengirimkan uptime Arduino setiap detik ke Virtual Pin 2.
-void myTimerEvent()
-{
-  // Anda dapat mengirim nilai apa pun kapan saja.
-  // Tolong jangan mengirim lebih dari 10 nilai per detik.
-  Blynk.virtualWrite(V2, millis() / 1000);
-}
-
-
-//=====================
-// bagian fungsi setup
-//=====================
+// bagian setup
 void setup(){
-
-// Debug console
-  Serial.begin(115200);
-
-  Blynk.begin(auth, ssid, password);
-  //Anda juga dapat menentukan server:
-  //Blynk.begin(auth, ssid, pass, "blynk.cloud", 80);
-  //Blynk.begin(auth, ssid, pass, IPAddress(192.168.1.100), 8080);
-
-  // Fungsi setup yang akan dipanggil setiap detik
-  timer.setInterval(1000L, myTimerEvent);
 
 // initialize LCD
   lcd.init();
   // nyalakan lampu latar LCD                      
   lcd.backlight();
   
-  // Port serial untuk keperluan debugging
+  // Port serial untuk keperluan debugging dan informasi ESP
   Serial.begin(115200);
 
   // Setel semua relai ke nonaktif saat program dimulai - jika disetel ke Biasanya Terbuka (NO), relai mati ketika Anda mengatur relai ke HIGH
@@ -182,8 +130,10 @@ void setup(){
       digitalWrite(relayGPIOs[i-1], LOW);
     }
   }
-  
+
+  // Bagian Konektiviatas Jaringan Wifi
   // Menghubungkan ke Wi-Fi
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
@@ -192,6 +142,13 @@ void setup(){
 
   // Cetak ESP8266 Alamat IP Lokal
   Serial.println(WiFi.localIP());
+
+  // Cek Koneksi Wifi apakah terhubung atau tidak, jika tidak akan menghuungkan ulang
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
+
+  Serial.print("RSSI: ");
+  Serial.println(WiFi.RSSI());
 
   // Rute untuk root / halaman web
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -204,7 +161,7 @@ void setup(){
     String inputParam;
     String inputMessage2;
     String inputParam2;
-    // DAPATKAN nilai input1 aktif <ESP_IP>/update?relay=<inputMessage>
+    // GET input1 value on <ESP_IP>/update?relay=<inputMessage>
     if (request->hasParam(PARAM_INPUT_1) & request->hasParam(PARAM_INPUT_2)) {
       inputMessage = request->getParam(PARAM_INPUT_1)->value();
       inputParam = PARAM_INPUT_1;
@@ -230,7 +187,7 @@ void setup(){
   server.begin();
 }
 
-// Setel Informasi Statis Ke LCD
+
 String messageStatic = "KSRM:";
 String messageToScroll = "Kontrol Saklar Relay Monitor";
 String messageInfoPortNonAktif = "Tidak/Belum Digunakan";
@@ -253,15 +210,9 @@ void scrollText(int row, String message, int delayTime, int lcdColumns) {
   }
 }
 
-//========================
 // bagian looping program
-//========================
 void loop() {
 
-  Blynk.run();
-  timer.run();
-  // Anda dapat menyuntikkan kode Anda sendiri atau menggabungkannya dengan sketsa lain.
-  // untuk menghindari fungsi delay()!
 
   // set kursor ke kolom pertama (0), row pertama(0)
   // untuk menampilkan info atau judul sistem
@@ -294,9 +245,7 @@ void loop() {
   lcd.clear();
 
   lcd.setCursor(0,1);
-  lcd.print("Status R5: ");
-  // print pesan info skrol
-  scrollText(1, messageInfoPortNonAktif, 240, lcdColumns);
+  lcd.print("Status R5: "); 
   delay(7000);
-  lcd.clear();
+  scrollText(1, messageInfoPortNonAktif, 260, lcdColumns);
 }
