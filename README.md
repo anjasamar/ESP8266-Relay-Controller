@@ -6,3 +6,6 @@ Segmen Program:
 -Relay Web Server
 -Relay Display info
 -Relay Blynk API
+
+Penambahan fungsi sedang dalam tahap pengerjaan.
+Additional functions are in progress.
