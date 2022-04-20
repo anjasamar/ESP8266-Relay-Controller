@@ -77,7 +77,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kontrol IOT Saklar Relay</title>
+  <title>ATSiDev - Kontrol IOT Saklar Relay</title>
   <style>
     html {font-family: Arial; display: inline-block; text-align: center;}
     h2 {font-size: 3.0rem;}
@@ -92,7 +92,7 @@ const char index_html[] PROGMEM = R"rawliteral(
   </style>
 </head>
 <body>
-  <h2>Risky Wuelek - ESP8266 <br/>Web Server IoT Controller</h2><hr/>
+  <h2>ATSiDev - ESP8266 <br/>Relay IoT Controller</h2><hr/>
   %BUTTONPLACEHOLDER%
 <script>function toggleCheckbox(element) {
   var xhr = new XMLHttpRequest();
