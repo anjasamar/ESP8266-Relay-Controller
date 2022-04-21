@@ -25,10 +25,10 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 #define RELAY_NO    true
 
 // Setel jumlah relai
-#define NUM_RELAYS  5
+#define NUM_RELAYS  4
 
 // Tetapkan setiap GPIO ke relai
-int relayGPIOs[NUM_RELAYS] = {14, 12, 13, 15, 02};
+int relayGPIOs[NUM_RELAYS] = {14, 12, 13, 15};
 
 // Ganti dengan kredensial jaringan Anda
 const char* ssid = "Keluarga";
@@ -44,7 +44,8 @@ AsyncWebServer server(80);
 
 // bagian halaman html atau front-end
 const char index_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML><html>
+<!DOCTYPE HTML>
+<html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kontrol IOT Saklar Relay</title>
@@ -62,14 +63,15 @@ const char index_html[] PROGMEM = R"rawliteral(
   </style>
 </head>
 <body>
-  <h2>Risky Wuelek - ESP8266 <br/>Web Server IoT Controller</h2><hr/>
+  <h2>ATSiDev I/O - ESP8266 <br/>Web Server IoT Controller</h2><hr/>
   %BUTTONPLACEHOLDER%
 <script>function toggleCheckbox(element) {
   var xhr = new XMLHttpRequest();
   if(element.checked){ xhr.open("GET", "/update?relay="+element.id+"&state=1", true); }
   else { xhr.open("GET", "/update?relay="+element.id+"&state=0", true); }
   xhr.send();
-}</script>
+}
+</script>
 </body>
 </html>
 )rawliteral";
@@ -111,11 +113,20 @@ String relayState(int numRelay){
 
 // bagian setup
 void setup(){
+String messageStatic = "Memulai Sistem...";
 
 // initialize LCD
   lcd.init();
   // nyalakan lampu latar LCD                      
   lcd.backlight();
+
+  lcd.setCursor(0,0);
+  // print pesan statis
+  lcd.print(messageStatic);
+  lcd.setCursor(0,1);
+  lcd.print(WiFi.status());
+  delay(6000);
+  lcd.clear();
   
   // Port serial untuk keperluan debugging dan informasi ESP
   Serial.begin(115200);
@@ -161,6 +172,7 @@ void setup(){
     String inputParam;
     String inputMessage2;
     String inputParam2;
+    
     // GET input1 value on <ESP_IP>/update?relay=<inputMessage>
     if (request->hasParam(PARAM_INPUT_1) & request->hasParam(PARAM_INPUT_2)) {
       inputMessage = request->getParam(PARAM_INPUT_1)->value();
@@ -168,12 +180,22 @@ void setup(){
       inputMessage2 = request->getParam(PARAM_INPUT_2)->value();
       inputParam2 = PARAM_INPUT_2;
       if(RELAY_NO){
-        Serial.print("NO ");
+        Serial.print("NO: ");
         digitalWrite(relayGPIOs[inputMessage.toInt()-1], !inputMessage2.toInt());
+        lcd.clear();
+        lcd.setCursor(0,1);
+        lcd.print(F("Relay:"));
+        lcd.print(inputMessage);
+        lcd.print(F(" DiUbah"));
       }
       else{
-        Serial.print("NC ");
+        Serial.print("NC: ");
         digitalWrite(relayGPIOs[inputMessage.toInt()-1], inputMessage2.toInt());
+        lcd.clear();
+        lcd.setCursor(0,1);
+        lcd.print(F("Relay:"));
+        lcd.print(inputMessage2);
+        lcd.print(F(" DiUbah"));
       }
     }
     else {
@@ -188,8 +210,7 @@ void setup(){
 }
 
 // Sring Data Untuk Kebutuhan Text
-String messageStatic = "KSRM:";
-String messageToScroll = "Kontrol Saklar Relay Monitor";
+String messageToScroll = "Relay Monitor";
 String messageInfoPortNonAktif = "Tidak/Belum Digunakan";
 
 // Fungsi untuk text skrol Judul projek
@@ -209,50 +230,25 @@ void scrollText(int row, String message, int delayTime, int lcdColumns) {
     delay(delayTime);
   }
 }
-
-
-
+  
 // bagian looping program
 void loop() {
 
-
   // set kursor ke kolom pertama (0), row pertama(0)
   // untuk menampilkan info atau judul sistem
-  lcd.setCursor(0, 0);
-  // print pesan statis
-  lcd.print(messageStatic);
   // print pesan skrol
-  scrollText(0, messageToScroll, 260, lcdColumns);
-  delay(3000);
   lcd.clear();
+  scrollText(0, messageToScroll, 260, lcdColumns);
+
   // Print Alamat IP
   lcd.setCursor(0,0);
-  lcd.print("IP: ");
+  lcd.print("IP:");
   lcd.print(WiFi.localIP());
-  
-  // set kursor ke kolom pertama(0), row kedua (1)
-  // untuk menampilkan status relay atau status perangkat lainya anda bisa menambahkannya nanti
   lcd.setCursor(0,1);
-  lcd.print(F("Status R1:"));
-  delay(7000);
-
-  
-  lcd.setCursor(0,1);
-  lcd.print(F("Status R2:"));
-  delay(7000);
-
-  
-  lcd.setCursor(0,1);
-  lcd.print(F("Status R3:"));
-  delay(7000);
-
-  lcd.setCursor(0,1);
-  lcd.print(F("Status R4:"));
-  delay(7000);
+  lcd.print("RSSI:");
+  lcd.print(WiFi.RSSI());
+  delay(6000);
+  lcd.clear();
 
 
-  lcd.setCursor(0,1);
-  lcd.print(F("Status R5: ")); 
-  delay(7000);
-  scrollText(1, messageInfoPortNonAktif, 260, lcdColumns);
 }
