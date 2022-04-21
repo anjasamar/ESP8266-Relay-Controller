@@ -1,7 +1,7 @@
 
 //Judul   : Program Relay dengan Display info
 //Pencipta: Anjas Amar Pradana
-//Driver  : ESP8266
+//Drive   : ESP8266
 //Dibuat  : 20/04/2022
 
 // Impor perpustakaan yang diperlukan
@@ -9,6 +9,7 @@
 #include "ESPAsyncWebServer.h"
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
+#include "ESP8266HTTPClient.h"
  
 // atur jumlah kolom dan baris LCD
 int lcdColumns = 16;
@@ -25,14 +26,14 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 #define RELAY_NO    true
 
 // Setel jumlah relai
-#define NUM_RELAYS  5
+#define NUM_RELAYS  4
 
 // Tetapkan setiap GPIO ke relai
-int relayGPIOs[NUM_RELAYS] = {14, 12, 13, 15, 9};
+int relayGPIOs[NUM_RELAYS] = {14, 12, 13, 15};
 
 // Ganti dengan kredensial jaringan Anda
-const char* ssid = "SSID Anda";
-const char* password = "Password Anda";
+const char* ssid = "WiFi SSID";
+const char* password = "WiFi Password";
 
 
 // untuk parameter input status dan relay
@@ -44,8 +45,7 @@ AsyncWebServer server(80);
 
 // bagian halaman html atau front-end
 const char index_html[] PROGMEM = R"rawliteral(
-<!DOCTYPE HTML>
-<html>
+<!DOCTYPE HTML><html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kontrol IOT Saklar Relay</title>
@@ -67,11 +67,10 @@ const char index_html[] PROGMEM = R"rawliteral(
   %BUTTONPLACEHOLDER%
 <script>function toggleCheckbox(element) {
   var xhr = new XMLHttpRequest();
-  if(element.checked){ xhr.open("GET", "/update?relay="+element.id+"&state=1", true);}
+  if(element.checked){ xhr.open("GET", "/update?relay="+element.id+"&state=1", true); }
   else { xhr.open("GET", "/update?relay="+element.id+"&state=0", true); }
   xhr.send();
-}
-</script>
+}</script>
 </body>
 </html>
 )rawliteral";
@@ -83,7 +82,6 @@ String processor(const String& var){
     String buttons ="";
     for(int i=1; i<=NUM_RELAYS; i++){
       String relayStateValue = relayState(i);
-
       
       // Fungsi Untuk Tombol On / Off
       buttons+= "<h4>Saklar Relay #" + String(i) + " - GPIO Ke " + relayGPIOs[i-1] + "</h4><label class=\"switch\"><input type=\"checkbox\" onchange=\"toggleCheckbox(this)\" id=\"" + String(i) + "\" "+ relayStateValue +"><span class=\"slider\"></span></label><hr/>";
@@ -99,13 +97,11 @@ String relayState(int numRelay){
     }
     else {
       return "checked";
-
     }
   }
   else {
     if(digitalRead(relayGPIOs[numRelay-1])){
       return "checked";
-      
     }
     else {
       return "";
@@ -114,12 +110,10 @@ String relayState(int numRelay){
   return "";
 }
 
-
-
 // bagian setup
 void setup(){
-String messageStatic = "Memulai Sistem...";
-
+String messageStartUp = "Memulai Sistem";
+String messageWebServerStart = "Mulai WebServer";
 // initialize LCD
   lcd.init();
   // nyalakan lampu latar LCD                      
@@ -127,26 +121,48 @@ String messageStatic = "Memulai Sistem...";
 
   lcd.setCursor(0,0);
   // print pesan statis
-  lcd.print(messageStatic);
+  lcd.print(messageStartUp);
+  lcd.blink();
+  delay(3000);
   lcd.setCursor(0,1);
+  lcd.print(messageWebServerStart);
+  lcd.blink();
+  delay(4000);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Web Server: OK");
+  delay(2000);
+  lcd.setCursor(0,1);
+  lcd.print("Program: OK");
+  delay(2000);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("WiFi: OK");
+  delay(3000);
+  lcd.setCursor(0,1);
+  lcd.print("Status WiFi: ");
   lcd.print(WiFi.status());
+  delay(3000);
+  lcd.clear();
+  lcd.print("Memulai Program");
+  lcd.blink();
+  lcd.setCursor(0,1);
+  lcd.print("Mohon Tunggu...");
   delay(6000);
+  lcd.noBlink();
   lcd.clear();
   
   // Port serial untuk keperluan debugging dan informasi ESP
   Serial.begin(115200);
 
-String STR;
   // Setel semua relai ke nonaktif saat program dimulai - jika disetel ke Biasanya Terbuka (NO), relai mati ketika Anda mengatur relai ke HIGH
   for(int i=1; i<=NUM_RELAYS; i++){
     pinMode(relayGPIOs[i-1], OUTPUT);
     if(RELAY_NO){
       digitalWrite(relayGPIOs[i-1], HIGH);
-     STR = "Aktif";
     }
     else{
       digitalWrite(relayGPIOs[i-1], LOW);
-     STR = "Mati";
     }
   }
 
@@ -180,6 +196,9 @@ String STR;
     String inputParam;
     String inputMessage2;
     String inputParam2;
+    String Status;
+    
+
     
     // GET input1 value on <ESP_IP>/update?relay=<inputMessage>
     if (request->hasParam(PARAM_INPUT_1) & request->hasParam(PARAM_INPUT_2)) {
@@ -192,9 +211,9 @@ String STR;
         digitalWrite(relayGPIOs[inputMessage.toInt()-1], !inputMessage2.toInt());
         lcd.clear();
         lcd.setCursor(0,1);
-        lcd.print("Relay_");
+        lcd.print("Relay-");
         lcd.print(inputMessage);
-        lcd.print("=");
+        lcd.print(": ");
         lcd.print(inputMessage2);
       }
       else{
@@ -214,8 +233,7 @@ String STR;
 }
 
 // Sring Data Untuk Kebutuhan Text
-String messageToScroll = "Media Pembelajaran Saklar Listrik Relay IoT";
-String messageInfoPortNonAktif = "Tidak/Belum Digunakan";
+String messageToScroll = "Metode Pembelajaran Saklar Relay Dengan ESP8266";
 
 // Fungsi untuk text skrol Judul projek
 // Fungsi menerima argumen berikut::
@@ -234,26 +252,27 @@ void scrollText(int row, String message, int delayTime, int lcdColumns) {
     delay(delayTime);
   }
 }
-  
+
 // bagian looping program
 void loop() {
-
   // set kursor ke kolom pertama (0), row pertama(0)
   // untuk menampilkan info atau judul sistem
+  lcd.setCursor(0,0);
   // print pesan skrol
-  lcd.clear();
   scrollText(0, messageToScroll, 260, lcdColumns);
+  delay(1000);
 
   // Print Alamat IP
+  lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("IP:");
+  lcd.noCursor();
   lcd.print(WiFi.localIP());
+  
   lcd.setCursor(0,1);
-  lcd.print("RSSI:");
+  lcd.print("Sinyal WiFi:");
   lcd.print(WiFi.RSSI());
   delay(6000);
   lcd.clear();
-  lcd.setCursor(0,0); lcd.print(NUM_RELAYS); 
-
 
 }
