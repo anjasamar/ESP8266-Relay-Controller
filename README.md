@@ -5,6 +5,7 @@ Segmen Program:
 -Relay Controller
 -Relay Web Server
 -Relay Display info
+-Relay Wireless
 
 Penambahan fungsi sedang dalam tahap pengerjaan.
 Additional functions are in progress.
