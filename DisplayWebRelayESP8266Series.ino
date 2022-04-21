@@ -31,8 +31,8 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 int relayGPIOs[NUM_RELAYS] = {14, 12, 13, 15, 02};
 
 // Ganti dengan kredensial jaringan Anda
-const char* ssid = "Wifi SSID";
-const char* password = "Wifi Password";
+const char* ssid = "Keluarga";
+const char* password = "MyFamily";
 
 
 // untuk parameter input status dan relay
@@ -187,7 +187,7 @@ void setup(){
   server.begin();
 }
 
-
+// Sring Data Untuk Kebutuhan Text
 String messageStatic = "KSRM:";
 String messageToScroll = "Kontrol Saklar Relay Monitor";
 String messageInfoPortNonAktif = "Tidak/Belum Digunakan";
@@ -210,6 +210,8 @@ void scrollText(int row, String message, int delayTime, int lcdColumns) {
   }
 }
 
+
+
 // bagian looping program
 void loop() {
 
@@ -221,31 +223,36 @@ void loop() {
   lcd.print(messageStatic);
   // print pesan skrol
   scrollText(0, messageToScroll, 260, lcdColumns);
+  delay(3000);
+  lcd.clear();
+  // Print Alamat IP
+  lcd.setCursor(0,0);
+  lcd.print("IP: ");
+  lcd.print(WiFi.localIP());
   
   // set kursor ke kolom pertama(0), row kedua (1)
   // untuk menampilkan status relay atau status perangkat lainya anda bisa menambahkannya nanti
   lcd.setCursor(0,1);
-  lcd.print("Status R1:");
+  lcd.print(F("Status R1:"));
   delay(7000);
-  lcd.clear();
+
   
   lcd.setCursor(0,1);
-  lcd.print("Status R2:");
+  lcd.print(F("Status R2:"));
   delay(7000);
-  lcd.clear();
+
   
   lcd.setCursor(0,1);
-  lcd.print("Status R3:");
+  lcd.print(F("Status R3:"));
   delay(7000);
-  lcd.clear();
 
   lcd.setCursor(0,1);
-  lcd.print("Status R4:");
+  lcd.print(F("Status R4:"));
   delay(7000);
-  lcd.clear();
+
 
   lcd.setCursor(0,1);
-  lcd.print("Status R5: "); 
+  lcd.print(F("Status R5: ")); 
   delay(7000);
   scrollText(1, messageInfoPortNonAktif, 260, lcdColumns);
 }
