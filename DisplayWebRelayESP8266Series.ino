@@ -1,7 +1,7 @@
 
 //Judul   : Program Relay dengan Display info
 //Pencipta: Anjas Amar Pradana
-//Drive   : ESP8266
+//Driver  : ESP8266
 //Dibuat  : 20/04/2022
 
 // Impor perpustakaan yang diperlukan
