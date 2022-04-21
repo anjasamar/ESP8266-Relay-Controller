@@ -25,14 +25,14 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 #define RELAY_NO    true
 
 // Setel jumlah relai
-#define NUM_RELAYS  4
+#define NUM_RELAYS  5
 
 // Tetapkan setiap GPIO ke relai
-int relayGPIOs[NUM_RELAYS] = {14, 12, 13, 15};
+int relayGPIOs[NUM_RELAYS] = {14, 12, 13, 15, 9};
 
 // Ganti dengan kredensial jaringan Anda
-const char* ssid = "Keluarga";
-const char* password = "MyFamily";
+const char* ssid = "SSID Anda";
+const char* password = "Password Anda";
 
 
 // untuk parameter input status dan relay
@@ -67,7 +67,7 @@ const char index_html[] PROGMEM = R"rawliteral(
   %BUTTONPLACEHOLDER%
 <script>function toggleCheckbox(element) {
   var xhr = new XMLHttpRequest();
-  if(element.checked){ xhr.open("GET", "/update?relay="+element.id+"&state=1", true); }
+  if(element.checked){ xhr.open("GET", "/update?relay="+element.id+"&state=1", true);}
   else { xhr.open("GET", "/update?relay="+element.id+"&state=0", true); }
   xhr.send();
 }
@@ -83,6 +83,7 @@ String processor(const String& var){
     String buttons ="";
     for(int i=1; i<=NUM_RELAYS; i++){
       String relayStateValue = relayState(i);
+
       
       // Fungsi Untuk Tombol On / Off
       buttons+= "<h4>Saklar Relay #" + String(i) + " - GPIO Ke " + relayGPIOs[i-1] + "</h4><label class=\"switch\"><input type=\"checkbox\" onchange=\"toggleCheckbox(this)\" id=\"" + String(i) + "\" "+ relayStateValue +"><span class=\"slider\"></span></label><hr/>";
@@ -98,11 +99,13 @@ String relayState(int numRelay){
     }
     else {
       return "checked";
+
     }
   }
   else {
     if(digitalRead(relayGPIOs[numRelay-1])){
       return "checked";
+      
     }
     else {
       return "";
@@ -110,6 +113,8 @@ String relayState(int numRelay){
   }
   return "";
 }
+
+
 
 // bagian setup
 void setup(){
@@ -131,14 +136,17 @@ String messageStatic = "Memulai Sistem...";
   // Port serial untuk keperluan debugging dan informasi ESP
   Serial.begin(115200);
 
+String STR;
   // Setel semua relai ke nonaktif saat program dimulai - jika disetel ke Biasanya Terbuka (NO), relai mati ketika Anda mengatur relai ke HIGH
   for(int i=1; i<=NUM_RELAYS; i++){
     pinMode(relayGPIOs[i-1], OUTPUT);
     if(RELAY_NO){
       digitalWrite(relayGPIOs[i-1], HIGH);
+     STR = "Aktif";
     }
     else{
       digitalWrite(relayGPIOs[i-1], LOW);
+     STR = "Mati";
     }
   }
 
@@ -184,18 +192,14 @@ String messageStatic = "Memulai Sistem...";
         digitalWrite(relayGPIOs[inputMessage.toInt()-1], !inputMessage2.toInt());
         lcd.clear();
         lcd.setCursor(0,1);
-        lcd.print(F("Relay:"));
+        lcd.print("Relay_");
         lcd.print(inputMessage);
-        lcd.print(F(" DiUbah"));
+        lcd.print("=");
+        lcd.print(inputMessage2);
       }
       else{
         Serial.print("NC: ");
         digitalWrite(relayGPIOs[inputMessage.toInt()-1], inputMessage2.toInt());
-        lcd.clear();
-        lcd.setCursor(0,1);
-        lcd.print(F("Relay:"));
-        lcd.print(inputMessage2);
-        lcd.print(F(" DiUbah"));
       }
     }
     else {
@@ -210,7 +214,7 @@ String messageStatic = "Memulai Sistem...";
 }
 
 // Sring Data Untuk Kebutuhan Text
-String messageToScroll = "Relay Monitor";
+String messageToScroll = "Media Pembelajaran Saklar Listrik Relay IoT";
 String messageInfoPortNonAktif = "Tidak/Belum Digunakan";
 
 // Fungsi untuk text skrol Judul projek
@@ -249,6 +253,7 @@ void loop() {
   lcd.print(WiFi.RSSI());
   delay(6000);
   lcd.clear();
+  lcd.setCursor(0,0); lcd.print(NUM_RELAYS); 
 
 
 }
